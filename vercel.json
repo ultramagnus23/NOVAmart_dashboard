@@ -1,0 +1,6 @@
+{
+  "outputDirectory": "static",
+  "routes": [
+    { "src": "/", "dest": "/dashboard.html" }
+  ]
+}

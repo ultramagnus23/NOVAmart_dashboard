@@ -1,0 +1,230 @@
+{
+  "_note": "Demo data. Run: python export_data.py 'NovaMart_v3 (1).ipynb' Project_2.xlsx",
+  "kpis": {
+    "total_leads": 15420,
+    "conversion_rate": 18.5,
+    "avg_cpa": 42.30,
+    "total_revenue": 2847600,
+    "roas": 4.2,
+    "avg_order_value": 184.50,
+    "repeat_buyer_rate": 34.2,
+    "return_rate": 8.7
+  },
+  "channels": [
+    {
+      "channel": "Referral",
+      "total_leads": 2300,
+      "conversion_rate": 28.6,
+      "avg_cpa": 22.80,
+      "avg_ltv": 680.00,
+      "repeat_rate": 51.3,
+      "avg_days": 8.5,
+      "avg_discount": 5.2
+    },
+    {
+      "channel": "Email",
+      "total_leads": 4200,
+      "conversion_rate": 24.1,
+      "avg_cpa": 31.50,
+      "avg_ltv": 520.00,
+      "repeat_rate": 42.0,
+      "avg_days": 12.3,
+      "avg_discount": 8.5
+    },
+    {
+      "channel": "Social Media",
+      "total_leads": 5100,
+      "conversion_rate": 19.2,
+      "avg_cpa": 45.20,
+      "avg_ltv": 380.00,
+      "repeat_rate": 30.1,
+      "avg_days": 18.7,
+      "avg_discount": 12.0
+    },
+    {
+      "channel": "Search",
+      "total_leads": 3820,
+      "conversion_rate": 15.4,
+      "avg_cpa": 58.90,
+      "avg_ltv": 290.00,
+      "repeat_rate": 22.8,
+      "avg_days": 25.1,
+      "avg_discount": 14.3
+    }
+  ],
+  "segments": [
+    {
+      "cluster": 0,
+      "customers": 3240,
+      "avg_ltv": 820.50,
+      "avg_orders": 8.4,
+      "avg_aov": 215.30,
+      "label": "Champions"
+    },
+    {
+      "cluster": 1,
+      "customers": 5180,
+      "avg_ltv": 380.20,
+      "avg_orders": 4.1,
+      "avg_aov": 172.10,
+      "label": "Growth Potential"
+    },
+    {
+      "cluster": 2,
+      "customers": 6420,
+      "avg_ltv": 125.80,
+      "avg_orders": 1.8,
+      "avg_aov": 98.60,
+      "label": "At Risk"
+    }
+  ],
+  "campaign_clusters": [
+    {
+      "cluster": "0",
+      "roas": 5.8,
+      "conversion_rate": 28.4,
+      "cpl": 18.50,
+      "campaign_count": 42,
+      "recommendation": "Scale — top performers"
+    },
+    {
+      "cluster": "1",
+      "roas": 3.2,
+      "conversion_rate": 16.1,
+      "cpl": 38.20,
+      "campaign_count": 67,
+      "recommendation": "Maintain — stable returns"
+    },
+    {
+      "cluster": "2",
+      "roas": 1.4,
+      "conversion_rate": 7.8,
+      "cpl": 72.90,
+      "campaign_count": 31,
+      "recommendation": "Stop — poor ROI, redesign"
+    }
+  ],
+  "discount": [
+    {
+      "channel": "Email",
+      "no_discount_rate": 21.3,
+      "discount_rate": 31.5,
+      "uplift_pp": 10.2,
+      "discount_verdict": "effective"
+    },
+    {
+      "channel": "Social Media",
+      "no_discount_rate": 17.8,
+      "discount_rate": 20.1,
+      "uplift_pp": 2.3,
+      "discount_verdict": "marginal"
+    },
+    {
+      "channel": "Referral",
+      "no_discount_rate": 27.4,
+      "discount_rate": 28.9,
+      "uplift_pp": 1.5,
+      "discount_verdict": "ineffective"
+    },
+    {
+      "channel": "Search",
+      "no_discount_rate": 13.2,
+      "discount_rate": 19.8,
+      "uplift_pp": 6.6,
+      "discount_verdict": "effective"
+    }
+  ],
+  "lead_models": {
+    "models": [
+      {
+        "model": "Random Forest",
+        "accuracy": 0.847,
+        "precision": 0.831,
+        "recall": 0.812,
+        "f1": 0.821
+      },
+      {
+        "model": "Logistic Regression",
+        "accuracy": 0.793,
+        "precision": 0.778,
+        "recall": 0.765,
+        "f1": 0.771
+      },
+      {
+        "model": "Gradient Boosting",
+        "accuracy": 0.862,
+        "precision": 0.849,
+        "recall": 0.838,
+        "f1": 0.843
+      }
+    ],
+    "best_model": "Gradient Boosting",
+    "best_metrics": {
+      "model": "Gradient Boosting",
+      "accuracy": 0.862,
+      "precision": 0.849,
+      "recall": 0.838,
+      "f1": 0.843
+    },
+    "priority_tiers": [
+      {
+        "tier": "High",
+        "leads": 3420,
+        "actual_conv": 1284,
+        "conv_rate": 37.5
+      },
+      {
+        "tier": "Medium",
+        "leads": 6280,
+        "actual_conv": 1382,
+        "conv_rate": 22.0
+      },
+      {
+        "tier": "Low",
+        "leads": 5720,
+        "actual_conv": 458,
+        "conv_rate": 8.0
+      }
+    ]
+  },
+  "pareto": {
+    "pct_customers": 23.4,
+    "gini_coefficient": 0.682,
+    "bottom_20_net": 45200.0,
+    "top_80_net": 2284800.0
+  },
+  "repeat_buyer": {
+    "models": [
+      {
+        "model": "Random Forest",
+        "accuracy": 0.812,
+        "precision": 0.798,
+        "recall": 0.784,
+        "f1": 0.791
+      },
+      {
+        "model": "Logistic Regression",
+        "accuracy": 0.756,
+        "precision": 0.741,
+        "recall": 0.729,
+        "f1": 0.735
+      },
+      {
+        "model": "XGBoost",
+        "accuracy": 0.834,
+        "precision": 0.821,
+        "recall": 0.808,
+        "f1": 0.814
+      }
+    ],
+    "best_model": "XGBoost",
+    "best_metrics": {
+      "model": "XGBoost",
+      "accuracy": 0.834,
+      "precision": 0.821,
+      "recall": 0.808,
+      "f1": 0.814
+    }
+  },
+  "extraction_warnings": []
+}

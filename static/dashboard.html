@@ -486,29 +486,11 @@ body {
     <div class="upload-subtitle">Intelligence Dashboard</div>
   </div>
 
-  <div class="upload-card">
-    <div class="file-zone" id="zone-nb" ondragover="zoneDrag(event,'zone-nb')" ondragleave="zoneDrag(event,'zone-nb',true)" ondrop="zoneDrop(event,'zone-nb','nb-input')">
-      <input type="file" id="nb-input" accept=".ipynb" onchange="fileChosen('nb-input','nb-name')"/>
-      <div class="zone-label">Notebook</div>
-      <div class="zone-name" id="nb-name">Drop .ipynb here or click to browse</div>
-      <div class="zone-hint">NovaMart_v3 (1).ipynb, NovaMart_Final.ipynb, or any compatible notebook</div>
-    </div>
-
-    <div class="file-zone" id="zone-xl" ondragover="zoneDrag(event,'zone-xl')" ondragleave="zoneDrag(event,'zone-xl',true)" ondrop="zoneDrop(event,'zone-xl','xl-input')">
-      <input type="file" id="xl-input" accept=".xlsx,.xls" onchange="fileChosen('xl-input','xl-name')"/>
-      <div class="zone-label">Data File</div>
-      <div class="zone-name" id="xl-name">Drop .xlsx here or click to browse</div>
-      <div class="zone-hint">Project_2.xlsx or any compatible data file</div>
-    </div>
-
-    <button class="run-btn" id="run-btn" onclick="startAnalysis()">▶ Run Analysis</button>
-  </div>
-
   <div id="progress-wrap">
     <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar"></div></div>
-    <div class="progress-msg" id="prog-msg">Initialising…</div>
+    <div class="progress-msg" id="prog-msg">Loading analytics data…</div>
     <div id="error-detail" style="display:none;margin-top:12px;background:#1a0a0a;border:1px solid rgba(239,68,68,.4);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:11px;color:#fca5a5;white-space:pre-wrap;word-break:break-all;max-height:260px;overflow-y:auto;width:100%;max-width:520px;text-align:left"></div>
-    <button id="retry-btn" onclick="retryAnalysis()" style="display:none;margin-top:14px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 24px;font-family:var(--font-mono);font-size:13px;cursor:pointer">↩ Try Again</button>
+    <button id="retry-btn" onclick="loadDashboard()" style="display:none;margin-top:14px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 24px;font-family:var(--font-mono);font-size:13px;cursor:pointer">↩ Try Again</button>
   </div>
 </div>
 
@@ -518,10 +500,7 @@ body {
 <div id="dashboard-screen">
   <div class="dash-header">
     <span class="dash-title">NovaMart Intelligence Dashboard</span>
-    <div style="display:flex;align-items:center;gap:16px">
-      <button onclick="newAnalysis()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:6px 16px;font-family:var(--font-mono);font-size:12px;cursor:pointer;letter-spacing:.06em" title="Upload new files and run again">↩ New Analysis</button>
-      <span class="dash-ts" id="dash-ts"></span>
-    </div>
+    <span class="dash-ts" id="dash-ts"></span>
   </div>
 
   <div class="partial-banner" id="partial-banner">
@@ -590,140 +569,45 @@ body {
 
 <script>
 /* ════════════════════════════════════════════
-   UPLOAD HELPERS
+   LOAD STATIC ANALYTICS DATA
 ═══════════════════════════════════════════ */
-function fileChosen(inputId, nameId) {
-  const f = document.getElementById(inputId).files[0];
-  if (f) document.getElementById(nameId).textContent = f.name;
-}
-function zoneDrag(e, zoneId, leave=false) {
-  e.preventDefault();
-  document.getElementById(zoneId).classList.toggle('drag-over', !leave);
-}
-function zoneDrop(e, zoneId, inputId) {
-  e.preventDefault();
-  document.getElementById(zoneId).classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (!f) return;
-  const inp = document.getElementById(inputId);
-  const dt = new DataTransfer();
-  dt.items.add(f);
-  inp.files = dt.files;
-  inp.dispatchEvent(new Event('change'));
-}
-
-/* ════════════════════════════════════════════
-   ANALYSIS RUN
-═══════════════════════════════════════════ */
-function retryAnalysis() {
-  const btn = document.getElementById('run-btn');
-  btn.disabled = false;
-  document.getElementById('progress-wrap').style.display = 'none';
-  document.getElementById('error-detail').style.display = 'none';
-  document.getElementById('retry-btn').style.display = 'none';
-  document.getElementById('prog-bar').style.background = 'var(--gold)';
-  document.getElementById('prog-bar').style.width = '0%';
-}
-
-function _showError(msg, detail) {
-  const progBar = document.getElementById('prog-bar');
-  const progMsg = document.getElementById('prog-msg');
-  const errDiv  = document.getElementById('error-detail');
-  const retryBtn = document.getElementById('retry-btn');
-  progBar.style.width = '100%';
-  progBar.style.background = 'var(--red)';
-  progMsg.textContent = msg;
-  if (detail) {
-    errDiv.style.display = 'block';
-    errDiv.textContent = detail;
-  }
-  retryBtn.style.display = 'block';
-  document.getElementById('run-btn').disabled = false;
-}
-
-async function startAnalysis() {
-  const nbFile = document.getElementById('nb-input').files[0];
-  const xlFile = document.getElementById('xl-input').files[0];
-  if (!nbFile) { alert('Please select a .ipynb notebook file.'); return; }
-  if (!xlFile) { alert('Please select a data (.xlsx) file.'); return; }
-
-  const btn = document.getElementById('run-btn');
-  btn.disabled = true;
-
+async function loadDashboard() {
   const progWrap = document.getElementById('progress-wrap');
   const progBar  = document.getElementById('prog-bar');
   const progMsg  = document.getElementById('prog-msg');
-  document.getElementById('error-detail').style.display = 'none';
-  document.getElementById('retry-btn').style.display = 'none';
-  progBar.style.background = 'var(--gold)';
+
   progWrap.style.display = 'flex';
-  progBar.style.width = '5%';
-  progMsg.textContent = 'Uploading files…';
-
-  const form = new FormData();
-  form.append('ipynb_file', nbFile);
-  form.append('xlsx_file', xlFile);
-
-  let runId = null;
-  let eventSource = null;
+  progBar.style.background = 'var(--gold)';
+  progBar.style.width = '20%';
+  progMsg.textContent = 'Loading analytics data…';
 
   try {
-    const resp = await fetch('/run', { method: 'POST', body: form });
-    runId = resp.headers.get('X-Run-Id');
-
-    if (runId) {
-      eventSource = new EventSource(`/run/stream/${runId}`);
-      let stepIdx = 0;
-      eventSource.onmessage = (e) => {
-        try {
-          const msg = JSON.parse(e.data);
-          if (msg.message) progMsg.textContent = msg.message;
-          stepIdx = Math.min(stepIdx + 1, 4);
-          progBar.style.width = `${20 + stepIdx * 16}%`;
-          if (msg.event === 'done' || msg.event === 'error') eventSource.close();
-        } catch (_) {}
-      };
-    }
-
     progBar.style.width = '60%';
-    progMsg.textContent = 'Waiting for notebook execution…';
-
-    if (!resp.ok) {
-      let errText = `HTTP ${resp.status}`;
-      try { const j = await resp.json(); errText = j.detail || JSON.stringify(j); } catch (_) {}
-      _showError(`Server error: ${errText}`, null);
-      if (eventSource) eventSource.close();
-      return;
-    }
-
+    const resp = await fetch('./data/analytics.json');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
     const data = await resp.json();
-
-    // Check for execution error
-    if (data.execution_error) {
-      const ee = data.execution_error;
-      const detail = `${ee.message || ''}\n\n${ee.traceback || ''}`.trim();
-      _showError('Notebook execution failed — showing partial results', detail);
-      // Still render partial dashboard if we have data
-      if (hasAnyData(data)) renderDashboard(data);
-      if (eventSource) eventSource.close();
-      return;
-    }
 
     progBar.style.width = '100%';
     progMsg.textContent = 'Rendering dashboard…';
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 200));
     renderDashboard(data);
-
   } catch (err) {
-    _showError(`Error: ${err.message}`, err.stack || '');
-    if (eventSource) eventSource.close();
+    progBar.style.background = 'var(--red)';
+    progBar.style.width = '100%';
+    progMsg.textContent = 'Failed to load analytics data';
+    const errDiv = document.getElementById('error-detail');
+    errDiv.style.display = 'block';
+    errDiv.textContent =
+      'Could not load data/analytics.json.\n\n' +
+      'Generate the data file by running locally:\n' +
+      '  python export_data.py "NovaMart_v3 (1).ipynb" Project_2.xlsx\n\n' +
+      'Then commit static/data/analytics.json and redeploy.\n\n' +
+      `Error: ${err.message}`;
+    document.getElementById('retry-btn').style.display = 'block';
   }
 }
 
-function hasAnyData(data) {
-  return data.kpis || data.channels || data.segments || data.campaign_clusters ||
-         data.discount || data.lead_models || data.pareto || data.repeat_buyer;
-}
+document.addEventListener('DOMContentLoaded', loadDashboard);
 
 /* ════════════════════════════════════════════
    COUNTER ANIMATION
@@ -753,14 +637,6 @@ function renderDashboard(data) {
   dash.style.display = 'block';
 
   document.getElementById('dash-ts').textContent = new Date().toLocaleString();
-
-  if (data.status === 'partial' || data.execution_error) {
-    document.getElementById('partial-banner').style.display = 'block';
-    if (data.debug_url) {
-      document.getElementById('partial-debug-link').innerHTML =
-        `<a href="${data.debug_url}" target="_blank" style="color:var(--gold);font-size:11px;text-decoration:underline">View raw output ↗</a>`;
-    }
-  }
 
   renderKPIs(data.kpis);
   renderChannels(data.channels);
@@ -1061,24 +937,6 @@ function renderWarnings(warnings) {
   const body = document.getElementById('warnings-body');
   sec.style.display = 'block';
   body.innerHTML = warnings.map(w => `• ${w}`).join('<br>');
-}
-
-/* ── New Analysis ── */
-function newAnalysis() {
-  document.getElementById('dashboard-screen').style.display = 'none';
-  document.getElementById('upload-screen').style.display = 'flex';
-  document.getElementById('partial-banner').style.display = 'none';
-  document.getElementById('progress-wrap').style.display = 'none';
-  document.getElementById('error-detail').style.display = 'none';
-  document.getElementById('retry-btn').style.display = 'none';
-  document.getElementById('prog-bar').style.width = '0%';
-  document.getElementById('prog-bar').style.background = 'var(--gold)';
-  document.getElementById('run-btn').disabled = false;
-  // Clear file inputs so users can pick new files
-  document.getElementById('nb-input').value = '';
-  document.getElementById('xl-input').value = '';
-  document.getElementById('nb-name').textContent = 'Drop .ipynb here or click to browse';
-  document.getElementById('xl-name').textContent = 'Drop .xlsx here or click to browse';
 }
 </script>
 </body>
