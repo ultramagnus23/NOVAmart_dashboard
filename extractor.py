@@ -394,7 +394,7 @@ def extract_pareto(all_text: str) -> Optional[dict]:
     Handles several heading styles produced by different NovaMart versions.
     """
     pct_match = re.search(
-        r'(?:Pareto|top)\s*[:\s]*([\d.]+)\s*%\s*of\s*customers?\s+(?:account|generate|drive)\s+for\s+80\s*%'
+        r'(?:Pareto|top)\s*[:\s]*([\d.]+)\s*%\s*of\s*customers?\s+(?:account|generate|drive)(?:\s+for)?\s+80\s*%'
         r'|(?:Pareto|top)\s*[:\s]*([\d.]+)\s*%\s*(?:of\s+customers?\s+)?(?:account|generate|drive)\s+80',
         all_text, re.IGNORECASE
     )
