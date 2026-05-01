@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+papermill
+nbformat
+nbconvert
+pandas
+numpy
+openpyxl
+scikit-learn
+scipy
+statsmodels
+matplotlib
+seaborn
+python-multipart
