@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NovaMart Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ──────────────────────────────────────────────
+   RESET & TOKENS
+────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0a0e1a;
+  --surface:  #111827;
+  --surface2: #151e2d;
+  --border:   #1e2535;
+  --gold:     #f0a500;
+  --gold-dim: rgba(240,165,0,.15);
+  --text:     #e8e8e8;
+  --muted:    #8892a4;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --blue:     #3b82f6;
+  --font-mono: 'DM Mono', monospace;
+  --font-head: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ──────────────────────────────────────────────
+   UPLOAD SCREEN
+────────────────────────────────────────────── */
+#upload-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px 20px;
+}
+
+.upload-logo {
+  font-family: var(--font-head);
+  font-size: 28px;
+  color: var(--gold);
+  letter-spacing: .08em;
+}
+
+.upload-subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.upload-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 48px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.file-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+}
+.file-zone:hover, .file-zone.drag-over {
+  border-color: var(--gold);
+  background: var(--gold-dim);
+}
+.file-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.file-zone .zone-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 6px;
+}
+.file-zone .zone-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--gold);
+  min-height: 20px;
+}
+.file-zone .zone-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.run-btn {
+  background: var(--gold);
+  color: #0a0e1a;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 32px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter .2s, transform .1s;
+  width: 100%;
+}
+.run-btn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.run-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+/* Progress bar */
+#progress-wrap {
+  width: 100%; max-width: 520px; display: none; flex-direction: column; gap: 10px;
+}
+.progress-bar-outer {
+  height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+}
+.progress-bar-inner {
+  height: 100%; background: var(--gold); border-radius: 2px;
+  width: 0%; transition: width .5s ease;
+}
+.progress-msg {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ──────────────────────────────────────────────
+   DASHBOARD SCREEN
+────────────────────────────────────────────── */
+#dashboard-screen { display: none; padding: 0 0 60px; }
+
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.dash-title {
+  font-family: var(--font-head);
+  font-size: 20px;
+  color: var(--gold);
+  letter-spacing: .04em;
+}
+.dash-ts {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Warning banner */
+.partial-banner {
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5;
+  font-size: 12px;
+  padding: 10px 32px;
+  display: none;
+}
+
+.dash-body { padding: 28px 32px; display: flex; flex-direction: column; gap: 28px; }
+
+/* ── Section headings ── */
+.section-title {
+  font-family: var(--font-head);
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  transition: box-shadow .2s;
+}
+.card:hover { box-shadow: 0 0 0 1px var(--gold); }
+
+.unavailable {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+/* ──────────────────────────────────────────────
+   KPI HERO STRIP
+────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.kpi-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 16px;
+  text-align: center;
+  transition: box-shadow .2s;
+}
+.kpi-tile:hover { box-shadow: 0 0 0 1px var(--gold); }
+.kpi-value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  min-height: 36px;
+}
+.kpi-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-top: 6px;
+}
+
+/* ──────────────────────────────────────────────
+   TWO-COLUMN LAYOUT
+────────────────────────────────────────────── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ──────────────────────────────────────────────
+   TABLES
+────────────────────────────────────────────── */
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.dash-table th {
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-table tr:last-child td { border-bottom: none; }
+.dash-table tr.row-best td:first-child { border-left: 3px solid var(--gold); }
+.dash-table tr.row-best { background: rgba(240,165,0,.06); }
+.dash-table tr.row-worst td:first-child { border-left: 3px solid var(--red); }
+.dash-table tr.row-worst { background: rgba(239,68,68,.06); }
+
+/* ──────────────────────────────────────────────
+   ACTION PILLS
+────────────────────────────────────────────── */
+.pill-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 12px; font-weight: 500; letter-spacing: .04em;
+}
+.pill-green  { background: rgba(34,197,94,.15);  color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+.pill-red    { background: rgba(239,68,68,.15);  color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+.pill-gold   { background: var(--gold-dim);       color: var(--gold); border: 1px solid rgba(240,165,0,.3); }
+.pill-blue   { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+
+/* ──────────────────────────────────────────────
+   SEGMENT CARDS
+────────────────────────────────────────────── */
+.segment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.seg-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.seg-card.gold-border  { border-top: 3px solid var(--gold); }
+.seg-card.blue-border  { border-top: 3px solid var(--blue); }
+.seg-card.red-border   { border-top: 3px solid var(--red); }
+.seg-icon { font-size: 22px; margin-bottom: 8px; }
+.seg-label { font-family: var(--font-head); font-size: 15px; margin-bottom: 12px; color: var(--text); }
+.seg-stats { display: flex; flex-direction: column; gap: 6px; }
+.seg-stat { display: flex; justify-content: space-between; font-size: 12px; }
+.seg-stat-key { color: var(--muted); }
+.seg-stat-val { font-family: var(--font-mono); color: var(--text); }
+.seg-action { font-style: italic; font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+
+/* ──────────────────────────────────────────────
+   CAMPAIGN CLUSTER CARDS
+────────────────────────────────────────────── */
+.cluster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.cluster-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.cluster-card.scale  { border-top: 3px solid var(--green); }
+.cluster-card.maintain { border-top: 3px solid var(--gold); }
+.cluster-card.stop   { border-top: 3px solid var(--red); }
+.cluster-rec {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 8px;
+}
+.cluster-rec.scale   { color: var(--green); }
+.cluster-rec.maintain { color: var(--gold); }
+.cluster-rec.stop    { color: var(--red); }
+.cluster-id { font-family: var(--font-head); font-size: 17px; margin-bottom: 14px; }
+.cluster-metrics {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.c-metric { text-align: center; }
+.c-metric-val { font-family: var(--font-mono); font-size: 18px; color: var(--text); }
+.c-metric-key { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.cluster-tooltip {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(10,14,26,.92); padding: 10px 14px;
+  font-size: 11px; color: var(--muted); line-height: 1.5;
+  transform: translateY(100%); transition: transform .25s;
+  border-top: 1px solid var(--border);
+}
+.cluster-card:hover .cluster-tooltip { transform: translateY(0); }
+
+/* ──────────────────────────────────────────────
+   UPLIFT TABLE
+────────────────────────────────────────────── */
+.uplift-green { color: var(--green); font-weight: 600; }
+.uplift-red   { color: var(--red); }
+.uplift-amber { color: var(--gold); }
+
+/* ──────────────────────────────────────────────
+   MODEL CARDS
+────────────────────────────────────────────── */
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.model-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  position: relative;
+}
+.model-card.best { border-color: var(--gold); }
+.best-badge {
+  position: absolute; top: -10px; right: 12px;
+  background: var(--gold); color: #0a0e1a;
+  font-size: 9px; font-weight: 700; letter-spacing: .12em;
+  padding: 3px 8px; border-radius: 4px; text-transform: uppercase;
+}
+.model-name { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+.model-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.m-stat-val { font-family: var(--font-mono); font-size: 16px; color: var(--text); }
+.m-stat-key { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+
+/* Priority tier bars */
+.tier-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+.tier-table th { font-size: 10px; color: var(--muted); text-transform: uppercase; padding: 6px 8px; text-align: left; }
+.tier-table td { padding: 8px; vertical-align: middle; }
+.tier-bar-outer { background: var(--border); border-radius: 3px; height: 6px; width: 120px; }
+.tier-bar-inner { height: 100%; border-radius: 3px; background: var(--gold); }
+
+/* ──────────────────────────────────────────────
+   PARETO BANNER
+────────────────────────────────────────────── */
+.pareto-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 32px;
+  text-align: center;
+}
+.pareto-pct {
+  font-family: var(--font-mono);
+  font-size: 72px;
+  color: var(--gold);
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -.04em;
+}
+.pareto-sub { font-size: 16px; color: var(--muted); margin: 8px 0 28px; }
+.gini-bar-outer {
+  max-width: 480px; margin: 0 auto 8px;
+  display: flex; align-items: center; gap: 12px;
+}
+.gini-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.gini-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; position: relative; }
+.gini-fill  { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--red)); }
+.gini-pointer {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--gold); border: 2px solid var(--bg);
+}
+.gini-value { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 20px; }
+.pareto-net {
+  display: flex; gap: 40px; justify-content: center; margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.p-net { text-align: center; }
+.p-net-val { font-family: var(--font-mono); font-size: 22px; color: var(--text); }
+.p-net-key { font-size: 11px; color: var(--muted); }
+.pareto-action {
+  font-size: 13px; color: var(--muted); max-width: 480px; margin: 0 auto;
+  border-top: 1px solid var(--border); padding-top: 18px;
+}
+
+/* ──────────────────────────────────────────────
+   REPEAT BUYER
+────────────────────────────────────────────── */
+.repeat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     UPLOAD SCREEN
+═══════════════════════════════════════════ -->
+<div id="upload-screen">
+  <div style="text-align:center">
+    <div class="upload-logo">NovaMart</div>
+    <div class="upload-subtitle">Intelligence Dashboard</div>
+  </div>
+
+  <div class="upload-card">
+    <div class="file-zone" id="zone-nb" ondragover="zoneDrag(event,'zone-nb')" ondragleave="zoneDrag(event,'zone-nb',true)" ondrop="zoneDrop(event,'zone-nb','nb-input')">
+      <input type="file" id="nb-input" accept=".ipynb" onchange="fileChosen('nb-input','nb-name')"/>
+      <div class="zone-label">Notebook</div>
+      <div class="zone-name" id="nb-name">Drop .ipynb here or click to browse</div>
+      <div class="zone-hint">NovaMart_v3 (1).ipynb, NovaMart_Final.ipynb, or any compatible notebook</div>
+    </div>
+
+    <div class="file-zone" id="zone-xl" ondragover="zoneDrag(event,'zone-xl')" ondragleave="zoneDrag(event,'zone-xl',true)" ondrop="zoneDrop(event,'zone-xl','xl-input')">
+      <input type="file" id="xl-input" accept=".xlsx,.xls" onchange="fileChosen('xl-input','xl-name')"/>
+      <div class="zone-label">Data File</div>
+      <div class="zone-name" id="xl-name">Drop .xlsx here or click to browse</div>
+      <div class="zone-hint">Project_2.xlsx or any compatible data file</div>
+    </div>
+
+    <button class="run-btn" id="run-btn" onclick="startAnalysis()">▶ Run Analysis</button>
+  </div>
+
+  <div id="progress-wrap">
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="prog-bar"></div></div>
+    <div class="progress-msg" id="prog-msg">Initialising…</div>
+    <div id="error-detail" style="display:none;margin-top:12px;background:#1a0a0a;border:1px solid rgba(239,68,68,.4);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:11px;color:#fca5a5;white-space:pre-wrap;word-break:break-all;max-height:260px;overflow-y:auto;width:100%;max-width:520px;text-align:left"></div>
+    <button id="retry-btn" onclick="retryAnalysis()" style="display:none;margin-top:14px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 24px;font-family:var(--font-mono);font-size:13px;cursor:pointer">↩ Try Again</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DASHBOARD SCREEN
+═══════════════════════════════════════════ -->
+<div id="dashboard-screen">
+  <div class="dash-header">
+    <span class="dash-title">NovaMart Intelligence Dashboard</span>
+    <div style="display:flex;align-items:center;gap:16px">
+      <button onclick="newAnalysis()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:6px 16px;font-family:var(--font-mono);font-size:12px;cursor:pointer;letter-spacing:.06em" title="Upload new files and run again">↩ New Analysis</button>
+      <span class="dash-ts" id="dash-ts"></span>
+    </div>
+  </div>
+
+  <div class="partial-banner" id="partial-banner">
+    ⚠ Partial results — notebook execution encountered an error. Some sections may be incomplete.
+    <span id="partial-debug-link" style="margin-left:12px"></span>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- KPI Strip -->
+    <section>
+      <div class="section-title">Executive KPIs</div>
+      <div class="kpi-grid" id="kpi-grid"></div>
+    </section>
+
+    <!-- Channel + Segments -->
+    <div class="two-col">
+      <section>
+        <div class="section-title">Channel Performance</div>
+        <div class="card" id="channel-card"></div>
+      </section>
+      <section>
+        <div class="section-title">Customer Segments</div>
+        <div class="segment-grid" id="segment-grid"></div>
+      </section>
+    </div>
+
+    <!-- Campaign Clusters + Discount -->
+    <div class="two-col">
+      <section>
+        <div class="section-title">Campaign Clusters</div>
+        <div class="cluster-grid" id="cluster-grid"></div>
+      </section>
+      <section>
+        <div class="section-title">Discount Analysis</div>
+        <div class="card" id="discount-card"></div>
+      </section>
+    </div>
+
+    <!-- Models + Repeat Buyer -->
+    <div class="two-col">
+      <section>
+        <div class="section-title">Lead Conversion Models</div>
+        <div id="models-section"></div>
+      </section>
+      <section>
+        <div class="section-title">Repeat Buyer Models</div>
+        <div id="repeat-section"></div>
+      </section>
+    </div>
+
+    <!-- Pareto Banner -->
+    <section>
+      <div class="section-title">Pareto Analysis</div>
+      <div id="pareto-section"></div>
+    </section>
+
+    <!-- Extraction warnings -->
+    <div id="warnings-section" style="display:none">
+      <div class="section-title">Extraction Notes</div>
+      <div class="card" id="warnings-body" style="font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.8"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   UPLOAD HELPERS
+═══════════════════════════════════════════ */
+function fileChosen(inputId, nameId) {
+  const f = document.getElementById(inputId).files[0];
+  if (f) document.getElementById(nameId).textContent = f.name;
+}
+function zoneDrag(e, zoneId, leave=false) {
+  e.preventDefault();
+  document.getElementById(zoneId).classList.toggle('drag-over', !leave);
+}
+function zoneDrop(e, zoneId, inputId) {
+  e.preventDefault();
+  document.getElementById(zoneId).classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (!f) return;
+  const inp = document.getElementById(inputId);
+  const dt = new DataTransfer();
+  dt.items.add(f);
+  inp.files = dt.files;
+  inp.dispatchEvent(new Event('change'));
+}
+
+/* ════════════════════════════════════════════
+   ANALYSIS RUN
+═══════════════════════════════════════════ */
+function retryAnalysis() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = false;
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('error-detail').style.display = 'none';
+  document.getElementById('retry-btn').style.display = 'none';
+  document.getElementById('prog-bar').style.background = 'var(--gold)';
+  document.getElementById('prog-bar').style.width = '0%';
+}
+
+function _showError(msg, detail) {
+  const progBar = document.getElementById('prog-bar');
+  const progMsg = document.getElementById('prog-msg');
+  const errDiv  = document.getElementById('error-detail');
+  const retryBtn = document.getElementById('retry-btn');
+  progBar.style.width = '100%';
+  progBar.style.background = 'var(--red)';
+  progMsg.textContent = msg;
+  if (detail) {
+    errDiv.style.display = 'block';
+    errDiv.textContent = detail;
+  }
+  retryBtn.style.display = 'block';
+  document.getElementById('run-btn').disabled = false;
+}
+
+async function startAnalysis() {
+  const nbFile = document.getElementById('nb-input').files[0];
+  const xlFile = document.getElementById('xl-input').files[0];
+  if (!nbFile) { alert('Please select a .ipynb notebook file.'); return; }
+  if (!xlFile) { alert('Please select a data (.xlsx) file.'); return; }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+
+  const progWrap = document.getElementById('progress-wrap');
+  const progBar  = document.getElementById('prog-bar');
+  const progMsg  = document.getElementById('prog-msg');
+  document.getElementById('error-detail').style.display = 'none';
+  document.getElementById('retry-btn').style.display = 'none';
+  progBar.style.background = 'var(--gold)';
+  progWrap.style.display = 'flex';
+  progBar.style.width = '5%';
+  progMsg.textContent = 'Uploading files…';
+
+  const form = new FormData();
+  form.append('ipynb_file', nbFile);
+  form.append('xlsx_file', xlFile);
+
+  let runId = null;
+  let eventSource = null;
+
+  try {
+    const resp = await fetch('/run', { method: 'POST', body: form });
+    runId = resp.headers.get('X-Run-Id');
+
+    if (runId) {
+      eventSource = new EventSource(`/run/stream/${runId}`);
+      let stepIdx = 0;
+      eventSource.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.message) progMsg.textContent = msg.message;
+          stepIdx = Math.min(stepIdx + 1, 4);
+          progBar.style.width = `${20 + stepIdx * 16}%`;
+          if (msg.event === 'done' || msg.event === 'error') eventSource.close();
+        } catch (_) {}
+      };
+    }
+
+    progBar.style.width = '60%';
+    progMsg.textContent = 'Waiting for notebook execution…';
+
+    if (!resp.ok) {
+      let errText = `HTTP ${resp.status}`;
+      try { const j = await resp.json(); errText = j.detail || JSON.stringify(j); } catch (_) {}
+      _showError(`Server error: ${errText}`, null);
+      if (eventSource) eventSource.close();
+      return;
+    }
+
+    const data = await resp.json();
+
+    // Check for execution error
+    if (data.execution_error) {
+      const ee = data.execution_error;
+      const detail = `${ee.message || ''}\n\n${ee.traceback || ''}`.trim();
+      _showError('Notebook execution failed — showing partial results', detail);
+      // Still render partial dashboard if we have data
+      if (hasAnyData(data)) renderDashboard(data);
+      if (eventSource) eventSource.close();
+      return;
+    }
+
+    progBar.style.width = '100%';
+    progMsg.textContent = 'Rendering dashboard…';
+    await new Promise(r => setTimeout(r, 400));
+    renderDashboard(data);
+
+  } catch (err) {
+    _showError(`Error: ${err.message}`, err.stack || '');
+    if (eventSource) eventSource.close();
+  }
+}
+
+function hasAnyData(data) {
+  return data.kpis || data.channels || data.segments || data.campaign_clusters ||
+         data.discount || data.lead_models || data.pareto || data.repeat_buyer;
+}
+
+/* ════════════════════════════════════════════
+   COUNTER ANIMATION
+═══════════════════════════════════════════ */
+function animateCounter(el, target, prefix='', suffix='', duration=800) {
+  const start = performance.now();
+  const isFloat = !Number.isInteger(target);
+  const decimals = isFloat ? (String(target).split('.')[1] || '').length : 0;
+
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const val = target * ease;
+    el.textContent = prefix + (isFloat ? val.toFixed(decimals) : Math.round(val).toLocaleString()) + suffix;
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = prefix + (isFloat ? target.toFixed(decimals) : target.toLocaleString()) + suffix;
+  }
+  requestAnimationFrame(step);
+}
+
+/* ════════════════════════════════════════════
+   DASHBOARD RENDER
+═══════════════════════════════════════════ */
+function renderDashboard(data) {
+  document.getElementById('upload-screen').style.display = 'none';
+  const dash = document.getElementById('dashboard-screen');
+  dash.style.display = 'block';
+
+  document.getElementById('dash-ts').textContent = new Date().toLocaleString();
+
+  if (data.status === 'partial' || data.execution_error) {
+    document.getElementById('partial-banner').style.display = 'block';
+    if (data.debug_url) {
+      document.getElementById('partial-debug-link').innerHTML =
+        `<a href="${data.debug_url}" target="_blank" style="color:var(--gold);font-size:11px;text-decoration:underline">View raw output ↗</a>`;
+    }
+  }
+
+  renderKPIs(data.kpis);
+  renderChannels(data.channels);
+  renderSegments(data.segments);
+  renderClusters(data.campaign_clusters);
+  renderDiscount(data.discount);
+  renderModels(data.lead_models);
+  renderPareto(data.pareto);
+  renderRepeat(data.repeat_buyer);
+  renderWarnings(data.extraction_warnings);
+}
+
+/* ── KPIs ── */
+const KPI_META = [
+  { key: 'total_leads',         label: 'Total Leads',         prefix: '',  suffix: '' },
+  { key: 'conversion_rate',     label: 'Conversion Rate',     prefix: '',  suffix: '%' },
+  { key: 'avg_cpa',             label: 'Avg CPA',             prefix: '$', suffix: '' },
+  { key: 'total_revenue',       label: 'Total Revenue',       prefix: '$', suffix: '' },
+  { key: 'roas',                label: 'ROAS',                prefix: '',  suffix: 'x' },
+  { key: 'avg_order_value',     label: 'Avg Order Value',     prefix: '$', suffix: '' },
+  { key: 'repeat_buyer_rate',   label: 'Repeat Buyer Rate',   prefix: '',  suffix: '%' },
+  { key: 'return_rate',         label: 'Return Rate',         prefix: '',  suffix: '%' },
+];
+
+function renderKPIs(kpis) {
+  const grid = document.getElementById('kpi-grid');
+  if (!kpis) { grid.innerHTML = '<div class="unavailable">KPI data unavailable — check notebook output format</div>'; return; }
+
+  grid.innerHTML = KPI_META.map(m => {
+    const val = kpis[m.key];
+    const display = (val == null) ? '—' : (m.prefix + (typeof val === 'number' && !Number.isInteger(val) ? val.toFixed(2) : (typeof val === 'number' ? val.toLocaleString() : val)) + m.suffix);
+    return `<div class="kpi-tile">
+      <div class="kpi-value" data-key="${m.key}" data-val="${val}" data-prefix="${m.prefix}" data-suffix="${m.suffix}">${display}</div>
+      <div class="kpi-label">${m.label}</div>
+    </div>`;
+  }).join('');
+
+  // Animate counters
+  document.querySelectorAll('.kpi-value[data-val]').forEach(el => {
+    const val = parseFloat(el.dataset.val);
+    if (!isNaN(val)) {
+      el.textContent = el.dataset.prefix + '0' + el.dataset.suffix;
+      animateCounter(el, val, el.dataset.prefix, el.dataset.suffix);
+    }
+  });
+}
+
+/* ── Channels ── */
+function renderChannels(channels) {
+  const card = document.getElementById('channel-card');
+  if (!channels || !channels.length) {
+    card.innerHTML = '<div class="unavailable">Channel data unavailable — check notebook output format</div>';
+    return;
+  }
+
+  const keys = Object.keys(channels[0]);
+  const convKey = keys.find(k => k.includes('conv')) || keys[2];
+  const sorted = [...channels].sort((a, b) => (b[convKey]||0) - (a[convKey]||0));
+  const best   = sorted[0];
+  const worst  = sorted[sorted.length - 1];
+
+  const header = `<tr>${keys.map(k => `<th>${k.replace(/_/g,' ')}</th>`).join('')}</tr>`;
+  const rows = sorted.map(row => {
+    const cls = row === best ? 'row-best' : row === worst ? 'row-worst' : '';
+    return `<tr class="${cls}">${keys.map(k => {
+      const v = row[k];
+      return `<td>${typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString() : v.toFixed(2)) : (v||'—')}</td>`;
+    }).join('')}</tr>`;
+  }).join('');
+
+  const pills = `<div class="pill-row">
+    <span class="pill pill-green">▲ Scale ${best[keys[0]]} — highest quality customers</span>
+    <span class="pill pill-red">⚠ Audit ${worst[keys[0]]} — lowest conversion + LTV</span>
+  </div>`;
+
+  card.innerHTML = `<div style="overflow-x:auto"><table class="dash-table"><thead>${header}</thead><tbody>${rows}</tbody></table></div>${pills}`;
+}
+
+/* ── Segments ── */
+const SEG_STYLES = [
+  { cls: 'gold-border', icon: '👑', action: "Protect. Exclusive perks. Never discount." },
+  { cls: 'blue-border', icon: '📈', action: "Re-engagement sequences. Test mid-tier offers." },
+  { cls: 'red-border',  icon: '⚠️', action: "Reduce spend here. Win-back campaign only." },
+];
+
+function renderSegments(segments) {
+  const grid = document.getElementById('segment-grid');
+  if (!segments || !segments.length) {
+    grid.innerHTML = '<div class="unavailable">Segment data unavailable</div>';
+    return;
+  }
+
+  const keys = Object.keys(segments[0]);
+  grid.innerHTML = segments.slice(0, 3).map((seg, i) => {
+    const style = SEG_STYLES[i] || SEG_STYLES[2];
+    const labelKey = keys.find(k => k.includes('label') || k.includes('name')) || keys[keys.length - 1];
+    const label = seg[labelKey] || `Cluster ${seg[keys[0]]}`;
+    const stats = keys.filter(k => k !== labelKey).slice(0, 4).map(k =>
+      `<div class="seg-stat"><span class="seg-stat-key">${k.replace(/_/g,' ')}</span>
+       <span class="seg-stat-val">${typeof seg[k] === 'number' ? (Number.isInteger(seg[k]) ? seg[k].toLocaleString() : seg[k].toFixed(2)) : (seg[k]||'—')}</span></div>`
+    ).join('');
+    return `<div class="seg-card ${style.cls}">
+      <div class="seg-icon">${style.icon}</div>
+      <div class="seg-label">${label}</div>
+      <div class="seg-stats">${stats}</div>
+      <div class="seg-action">${style.action}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Campaign Clusters ── */
+function _clusterClass(rec) {
+  const r = (rec || '').toLowerCase();
+  if (r.includes('scale')) return 'scale';
+  if (r.includes('stop') || r.includes('redesign')) return 'stop';
+  return 'maintain';
+}
+
+function renderClusters(clusters) {
+  const grid = document.getElementById('cluster-grid');
+  if (!clusters || !clusters.length) {
+    grid.innerHTML = '<div class="unavailable">Campaign cluster data unavailable</div>';
+    return;
+  }
+
+  grid.innerHTML = clusters.map(c => {
+    const cls = _clusterClass(c.recommendation);
+    return `<div class="cluster-card ${cls}">
+      <div class="cluster-rec ${cls}">${c.recommendation || 'Optimise'}</div>
+      <div class="cluster-id">Cluster ${c.cluster}</div>
+      <div class="cluster-metrics">
+        <div class="c-metric"><div class="c-metric-val">${c.roas ? c.roas.toFixed(2) : '—'}</div><div class="c-metric-key">ROAS</div></div>
+        <div class="c-metric"><div class="c-metric-val">${c.cpl ? c.cpl.toFixed(2) : '—'}</div><div class="c-metric-key">CPL</div></div>
+        <div class="c-metric"><div class="c-metric-val">${c.conversion_rate ? c.conversion_rate.toFixed(1) + '%' : '—'}</div><div class="c-metric-key">Conv Rate</div></div>
+        <div class="c-metric"><div class="c-metric-val">${c.campaign_count || '—'}</div><div class="c-metric-key">Campaigns</div></div>
+      </div>
+      <div class="cluster-tooltip">This cluster has ${c.campaign_count || 'N/A'} campaigns. ${_clusterAction(cls, c.campaign_count)}</div>
+    </div>`;
+  }).join('');
+}
+
+function _clusterAction(cls, n) {
+  if (cls === 'scale')    return `Scale budget — strong ROAS signals more headroom.`;
+  if (cls === 'stop')     return `Pause or redesign — poor returns, reallocate budget.`;
+  return `Maintain current budget, monitor weekly.`;
+}
+
+/* ── Discount ── */
+function renderDiscount(discount) {
+  const card = document.getElementById('discount-card');
+  if (!discount || !discount.length) {
+    card.innerHTML = '<div class="unavailable">Discount data unavailable</div>';
+    return;
+  }
+
+  const keys = Object.keys(discount[0]).filter(k => k !== 'discount_verdict');
+  const header = `<tr>${keys.map(k => `<th>${k.replace(/_/g,' ')}</th>`).join('')}</tr>`;
+  const rows = discount.map(row => {
+    return `<tr>${keys.map(k => {
+      const v = row[k];
+      if (k.includes('uplift')) {
+        const cls = row.discount_verdict === 'effective' ? 'uplift-green' : row.discount_verdict === 'ineffective' ? 'uplift-red' : 'uplift-amber';
+        return `<td class="${cls}">${typeof v === 'number' ? v.toFixed(2) : (v||'—')}</td>`;
+      }
+      return `<td>${typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString() : v.toFixed(2)) : (v||'—')}</td>`;
+    }).join('')}</tr>`;
+  }).join('');
+
+  const effective  = discount.filter(r => r.discount_verdict === 'effective').map(r => r[keys[0]]);
+  const ineffective = discount.filter(r => r.discount_verdict === 'ineffective').map(r => r[keys[0]]);
+  const verdict = effective.length >= ineffective.length ? 'effective' : 'ineffective';
+
+  const verdictHtml = `<div class="pill-row" style="margin-top:14px">
+    <span class="pill pill-gold">Discounting is <b>${verdict}</b> overall.
+      Works for: ${effective.join(', ') || 'none'}.
+      Avoid for: ${ineffective.join(', ') || 'none'}.
+    </span>
+  </div>`;
+
+  card.innerHTML = `<div style="overflow-x:auto"><table class="dash-table"><thead>${header}</thead><tbody>${rows}</tbody></table></div>${verdictHtml}`;
+}
+
+/* ── Lead Models ── */
+function renderModels(lead) {
+  const sec = document.getElementById('models-section');
+  if (!lead) {
+    sec.innerHTML = '<div class="unavailable">Lead model data unavailable</div>';
+    return;
+  }
+
+  const { models, best_model, priority_tiers } = lead;
+
+  const cards = (models || []).map(m => {
+    const keys = Object.keys(m);
+    const nameKey = keys[0];
+    const isBest = (m[nameKey] || '').toString() === best_model;
+    const stats = keys.slice(1).map(k =>
+      `<div><div class="m-stat-val">${typeof m[k]==='number'?m[k].toFixed(3):(m[k]||'—')}</div><div class="m-stat-key">${k}</div></div>`
+    ).join('');
+    return `<div class="model-card ${isBest ? 'best' : ''}">
+      ${isBest ? '<div class="best-badge">Best Model</div>' : ''}
+      <div class="model-name">${m[nameKey]}</div>
+      <div class="model-stats">${stats}</div>
+    </div>`;
+  }).join('');
+
+  let tiersHtml = '';
+  if (priority_tiers && priority_tiers.length) {
+    const maxRate = Math.max(...priority_tiers.map(t => t.conv_rate || 0));
+    const tierRows = priority_tiers.map(t =>
+      `<tr>
+        <td>${t.tier}</td>
+        <td style="font-family:var(--font-mono)">${(t.leads||0).toLocaleString()}</td>
+        <td style="font-family:var(--font-mono)">${t.conv_rate ? t.conv_rate.toFixed(1) + '%' : '—'}</td>
+        <td><div class="tier-bar-outer"><div class="tier-bar-inner" style="width:${maxRate ? (t.conv_rate/maxRate*100).toFixed(1) : 0}%"></div></div></td>
+      </tr>`
+    ).join('');
+    const high  = priority_tiers.find(t => t.tier === 'High');
+    const low   = priority_tiers.find(t => t.tier === 'Low');
+    const mult  = (high && low && low.conv_rate) ? (high.conv_rate / low.conv_rate).toFixed(1) + 'x' : '';
+    tiersHtml = `<table class="tier-table"><thead><tr><th>Tier</th><th>Leads</th><th>Conv Rate</th><th>Relative</th></tr></thead><tbody>${tierRows}</tbody></table>
+      ${mult ? `<div class="pill-row"><span class="pill pill-gold">Focus sales on High Priority leads — ${mult} higher conversion than Low Priority</span></div>` : ''}`;
+  }
+
+  sec.innerHTML = `<div class="model-grid">${cards}</div>${tiersHtml}`;
+}
+
+/* ── Pareto ── */
+function renderPareto(pareto) {
+  const sec = document.getElementById('pareto-section');
+  if (!pareto) {
+    sec.innerHTML = '<div class="card"><div class="unavailable">Pareto data unavailable</div></div>';
+    return;
+  }
+
+  const gini = pareto.gini_coefficient || 0;
+  const pct  = pareto.pct_customers || '?';
+  const b20  = pareto.bottom_20_net;
+  const t80  = pareto.top_80_net;
+
+  const fmt = v => v == null ? '—' : '$' + Number(v).toLocaleString(undefined, {maximumFractionDigits: 0});
+
+  sec.innerHTML = `<div class="pareto-banner">
+    <div class="pareto-pct" id="pareto-num">0%</div>
+    <div class="pareto-sub">of customers generate 80% of all revenue</div>
+    <div class="gini-bar-outer">
+      <span class="gini-label">Equal</span>
+      <div class="gini-track">
+        <div class="gini-fill" style="width:${(gini*100).toFixed(1)}%"></div>
+        <div class="gini-pointer" style="left:${(gini*100).toFixed(1)}%"></div>
+      </div>
+      <span class="gini-label">Unequal</span>
+    </div>
+    <div class="gini-value">Gini Coefficient: ${gini.toFixed(3)}</div>
+    <div class="pareto-net">
+      <div class="p-net"><div class="p-net-val">${fmt(b20)}</div><div class="p-net-key">Bottom 20% Net LTV</div></div>
+      <div class="p-net"><div class="p-net-val">${fmt(t80)}</div><div class="p-net-key">Top 80% Net LTV</div></div>
+    </div>
+    <div class="pareto-action">Your top <strong>${pct}%</strong> are your business. Build a VIP tier. Protect them first.</div>
+  </div>`;
+
+  if (typeof pct === 'number') {
+    const el = document.getElementById('pareto-num');
+    animateCounter(el, pct, '', '%');
+  }
+}
+
+/* ── Repeat Buyer ── */
+function renderRepeat(repeat) {
+  const sec = document.getElementById('repeat-section');
+  if (!repeat) {
+    sec.innerHTML = '<div class="unavailable">Repeat buyer data unavailable</div>';
+    return;
+  }
+
+  const { models, best_model } = repeat;
+  const cards = (models || []).map(m => {
+    const keys = Object.keys(m);
+    const nameKey = keys[0];
+    const isBest = (m[nameKey] || '').toString() === best_model;
+    const stats = keys.slice(1).map(k =>
+      `<div><div class="m-stat-val">${typeof m[k]==='number'?m[k].toFixed(3):(m[k]||'—')}</div><div class="m-stat-key">${k}</div></div>`
+    ).join('');
+    return `<div class="model-card ${isBest ? 'best' : ''}">
+      ${isBest ? '<div class="best-badge">Best Model</div>' : ''}
+      <div class="model-name">${m[nameKey]}</div>
+      <div class="model-stats">${stats}</div>
+    </div>`;
+  }).join('');
+
+  sec.innerHTML = `<div class="repeat-grid">${cards}</div>`;
+}
+
+/* ── Warnings ── */
+function renderWarnings(warnings) {
+  if (!warnings || !warnings.length) return;
+  const sec = document.getElementById('warnings-section');
+  const body = document.getElementById('warnings-body');
+  sec.style.display = 'block';
+  body.innerHTML = warnings.map(w => `• ${w}`).join('<br>');
+}
+
+/* ── New Analysis ── */
+function newAnalysis() {
+  document.getElementById('dashboard-screen').style.display = 'none';
+  document.getElementById('upload-screen').style.display = 'flex';
+  document.getElementById('partial-banner').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('error-detail').style.display = 'none';
+  document.getElementById('retry-btn').style.display = 'none';
+  document.getElementById('prog-bar').style.width = '0%';
+  document.getElementById('prog-bar').style.background = 'var(--gold)';
+  document.getElementById('run-btn').disabled = false;
+  // Clear file inputs so users can pick new files
+  document.getElementById('nb-input').value = '';
+  document.getElementById('xl-input').value = '';
+  document.getElementById('nb-name').textContent = 'Drop .ipynb here or click to browse';
+  document.getElementById('xl-name').textContent = 'Drop .xlsx here or click to browse';
+}
+</script>
+</body>
+</html>
