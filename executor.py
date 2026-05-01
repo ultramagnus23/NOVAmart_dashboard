@@ -17,6 +17,9 @@ from extractor import extract_all
 logger = logging.getLogger(__name__)
 
 
+NOTEBOOK_EXECUTION_TIMEOUT = 300
+
+
 def _patch_colab_cells(nb: nbformat.NotebookNode, xlsx_path: str) -> nbformat.NotebookNode:
     """
     Replace any cell that imports from google.colab with a simple
@@ -73,7 +76,7 @@ def run_notebook(nb_path: str, xlsx_path: str) -> dict:
                 patched_path,
                 output_path,
                 kernel_name='python3',
-                execution_timeout=300,
+                execution_timeout=NOTEBOOK_EXECUTION_TIMEOUT,
                 progress_bar=False,
                 log_output=True,
             )

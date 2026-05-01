@@ -490,15 +490,15 @@ body {
     <div class="file-zone" id="zone-nb" ondragover="zoneDrag(event,'zone-nb')" ondragleave="zoneDrag(event,'zone-nb',true)" ondrop="zoneDrop(event,'zone-nb','nb-input')">
       <input type="file" id="nb-input" accept=".ipynb" onchange="fileChosen('nb-input','nb-name')"/>
       <div class="zone-label">Notebook</div>
-      <div class="zone-name" id="nb-name">NovaMart_Final.ipynb</div>
-      <div class="zone-hint">Click or drag your .ipynb file here</div>
+      <div class="zone-name" id="nb-name">Drop .ipynb here or click to browse</div>
+      <div class="zone-hint">NovaMart_Final.ipynb or any compatible notebook</div>
     </div>
 
     <div class="file-zone" id="zone-xl" ondragover="zoneDrag(event,'zone-xl')" ondragleave="zoneDrag(event,'zone-xl',true)" ondrop="zoneDrop(event,'zone-xl','xl-input')">
       <input type="file" id="xl-input" accept=".xlsx,.xls" onchange="fileChosen('xl-input','xl-name')"/>
       <div class="zone-label">Data File</div>
-      <div class="zone-name" id="xl-name">Project_2.xlsx</div>
-      <div class="zone-hint">Click or drag your .xlsx file here</div>
+      <div class="zone-name" id="xl-name">Drop .xlsx here or click to browse</div>
+      <div class="zone-hint">Project_2.xlsx or any compatible data file</div>
     </div>
 
     <button class="run-btn" id="run-btn" onclick="startAnalysis()">▶ Run Analysis</button>

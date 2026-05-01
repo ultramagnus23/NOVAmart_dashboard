@@ -17,6 +17,24 @@ def _clean(text: str) -> str:
     return ansi.sub('', text)
 
 
+def _coerce(value: str):
+    """
+    Robustly convert a raw string token to int or float.
+    Strips common formatting characters ($, %, commas) before trying
+    numeric conversion.  Returns the original string on failure.
+    """
+    cleaned = value.replace('%', '').replace('$', '').replace(',', '').strip()
+    try:
+        int_val = int(cleaned)
+        return int_val
+    except ValueError:
+        pass
+    try:
+        return float(cleaned)
+    except ValueError:
+        return value
+
+
 def _collect_outputs(executed_nb) -> str:
     """Concatenate all printable text from every executed cell."""
     parts = []
@@ -109,13 +127,7 @@ def extract_channel_table(all_text: str) -> Optional[list]:
             ]
             for i, val in enumerate(parts):
                 key = field_names[i] if i < len(field_names) else f'col_{i}'
-                cleaned = val.replace('%', '').replace('$', '').replace(',', '')
-                try:
-                    row[key] = float(cleaned) if '.' in cleaned else (
-                        int(cleaned) if cleaned.lstrip('-').isdigit() else val
-                    )
-                except ValueError:
-                    row[key] = val
+                row[key] = _coerce(val)
             rows.append(row)
 
     if not rows:
@@ -161,13 +173,7 @@ def extract_segments(all_text: str) -> Optional[list]:
             ]
             for i, val in enumerate(parts):
                 key = field_names[i] if i < len(field_names) else f'col_{i}'
-                cleaned = val.replace('%', '').replace('$', '').replace(',', '')
-                try:
-                    row[key] = float(cleaned) if '.' in cleaned else (
-                        int(cleaned) if cleaned.lstrip('-').isdigit() else val
-                    )
-                except ValueError:
-                    row[key] = val
+                row[key] = _coerce(val)
             rows.append(row)
 
     return rows if rows else None
@@ -241,13 +247,7 @@ def extract_discount_analysis(all_text: str) -> Optional[list]:
             field_names = col_headers or ['channel', 'no_discount_rate', 'discount_rate', 'uplift_pp']
             for i, val in enumerate(parts):
                 key = field_names[i] if i < len(field_names) else f'col_{i}'
-                cleaned = val.replace('%', '').replace('$', '').replace(',', '')
-                try:
-                    row[key] = float(cleaned) if '.' in cleaned else (
-                        int(cleaned) if cleaned.lstrip('-').isdigit() else val
-                    )
-                except ValueError:
-                    row[key] = val
+                row[key] = _coerce(val)
 
             # Determine uplift verdict — key name varies (uplift_pp, uplift_(pp), uplift…)
             uplift_key = next(
@@ -298,11 +298,7 @@ def extract_models(all_text: str) -> Optional[dict]:
             row = {}
             for i, val in enumerate(parts):
                 key = field_names[i] if i < len(field_names) else f'col_{i}'
-                cleaned = val.replace('%', '').replace(',', '')
-                try:
-                    row[key] = float(cleaned)
-                except ValueError:
-                    row[key] = val
+                row[key] = _coerce(val)
             models.append(row)
 
     if not models:
@@ -402,11 +398,7 @@ def extract_repeat_buyer(all_text: str) -> Optional[dict]:
             row = {}
             for i, val in enumerate(parts):
                 key = field_names[i] if i < len(field_names) else f'col_{i}'
-                cleaned = val.replace('%', '').replace(',', '')
-                try:
-                    row[key] = float(cleaned)
-                except ValueError:
-                    row[key] = val
+                row[key] = _coerce(val)
             models.append(row)
 
     if not models:

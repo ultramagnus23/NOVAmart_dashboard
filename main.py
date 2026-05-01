@@ -22,7 +22,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from extractor import extract_all
-from executor import _patch_colab_cells
+from executor import _patch_colab_cells, NOTEBOOK_EXECUTION_TIMEOUT
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -171,7 +171,7 @@ async def run_analysis(
                     patched_path,
                     output_path,
                     kernel_name="python3",
-                    execution_timeout=300,
+                    execution_timeout=NOTEBOOK_EXECUTION_TIMEOUT,
                     progress_bar=False,
                     log_output=True,
                 )
