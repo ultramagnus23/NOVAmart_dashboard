@@ -2,9 +2,10 @@
 main.py — FastAPI application for the NovaMart Analytics Dashboard.
 
 Endpoints:
-  GET  /           → serves static/dashboard.html
-  POST /run        → accepts .ipynb + .xlsx, executes notebook, returns JSON
-  GET  /run/stream → Server-Sent Events progress stream
+  GET  /                  → serves static/dashboard.html
+  POST /run               → accepts .ipynb + .xlsx, executes notebook, returns JSON
+  GET  /run/stream/{id}   → Server-Sent Events progress stream
+  GET  /debug/{run_id}    → returns raw notebook output text (for diagnosis)
 """
 
 import asyncio
@@ -18,7 +19,7 @@ from pathlib import Path
 import nbformat
 import papermill as pm
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from extractor import extract_all
@@ -35,6 +36,9 @@ app = FastAPI(title="NovaMart Analytics Dashboard")
 # Serve static files (CSS, JS assets if any)
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# In-memory store: run_id → raw output preview (for /debug endpoint)
+_debug_store: dict[str, str] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -88,6 +92,22 @@ async def run_stream(run_id: str):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Debug endpoint — returns raw notebook output text for a completed run
+# ---------------------------------------------------------------------------
+
+@app.get("/debug/{run_id}", include_in_schema=False)
+async def debug_output(run_id: str):
+    """
+    Returns the first 20 000 characters of raw notebook stdout for a run.
+    Useful for diagnosing why certain sections were not extracted.
+    """
+    text = _debug_store.get(run_id)
+    if text is None:
+        raise HTTPException(status_code=404, detail="No debug output found for this run_id.")
+    return PlainTextResponse(content=text)
 
 
 # ---------------------------------------------------------------------------
@@ -219,12 +239,17 @@ async def run_analysis(
         elif partial_result:
             result = partial_result
 
+        # Cache raw output for /debug endpoint
+        if result.get("_raw_output_preview"):
+            _debug_store[run_id] = result.pop("_raw_output_preview")
+
         # ------------------------------------------------------------------
         # Build response
         # ------------------------------------------------------------------
         response_data = {
             "run_id": run_id,
             "status": "partial" if exec_error else "ok",
+            "debug_url": f"/debug/{run_id}",
             **result,
         }
 
