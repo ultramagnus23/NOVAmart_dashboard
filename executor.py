@@ -28,10 +28,13 @@ def _colab_stub(xlsx_path: str, xlsx_filename: str) -> str:
     reference after calling files.upload():
 
         excel_file          – plain string path, used by pd.read_excel(excel_file)
+        file_path           – alias for excel_file (used by some v3 notebooks)
         uploaded            – dict {filename: bytes}, mimics files.upload() return value
         list(uploaded.keys())[0]    → returns xlsx_filename
         list(uploaded.values())[0]  → returns the raw bytes
-        io.BytesIO(uploaded[...])   → works because io is imported
+        io.BytesIO(uploaded[...])   → works because io is imported directly
+        BytesIO(...)                → shortcut alias also provided
+        _xlsx_name          – just the filename string
     """
     abs_path = os.path.abspath(xlsx_path)
     # Use repr() so backslashes and spaces in the path are safely escaped.
@@ -39,8 +42,12 @@ def _colab_stub(xlsx_path: str, xlsx_filename: str) -> str:
     name_repr = repr(xlsx_filename)
     return (
         "# ── NovaMart dashboard: Google Colab file-upload stub ──\n"
+        "import io\n"
         "import io as _io\n"
+        "from io import BytesIO\n"
         f"excel_file   = {path_repr}\n"
+        f"file_path    = {path_repr}\n"
+        f"_xlsx_name   = {name_repr}\n"
         f"_xlsx_bytes  = open({path_repr}, 'rb').read()\n"
         f"uploaded     = {{{name_repr}: _xlsx_bytes}}\n"
     )

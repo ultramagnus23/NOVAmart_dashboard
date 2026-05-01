@@ -491,7 +491,7 @@ body {
       <input type="file" id="nb-input" accept=".ipynb" onchange="fileChosen('nb-input','nb-name')"/>
       <div class="zone-label">Notebook</div>
       <div class="zone-name" id="nb-name">Drop .ipynb here or click to browse</div>
-      <div class="zone-hint">NovaMart_Final.ipynb or any compatible notebook</div>
+      <div class="zone-hint">NovaMart_v3 (1).ipynb, NovaMart_Final.ipynb, or any compatible notebook</div>
     </div>
 
     <div class="file-zone" id="zone-xl" ondragover="zoneDrag(event,'zone-xl')" ondragleave="zoneDrag(event,'zone-xl',true)" ondrop="zoneDrop(event,'zone-xl','xl-input')">
@@ -518,7 +518,10 @@ body {
 <div id="dashboard-screen">
   <div class="dash-header">
     <span class="dash-title">NovaMart Intelligence Dashboard</span>
-    <span class="dash-ts" id="dash-ts"></span>
+    <div style="display:flex;align-items:center;gap:16px">
+      <button onclick="newAnalysis()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:6px 16px;font-family:var(--font-mono);font-size:12px;cursor:pointer;letter-spacing:.06em" title="Upload new files and run again">↩ New Analysis</button>
+      <span class="dash-ts" id="dash-ts"></span>
+    </div>
   </div>
 
   <div class="partial-banner" id="partial-banner">
@@ -1058,6 +1061,24 @@ function renderWarnings(warnings) {
   const body = document.getElementById('warnings-body');
   sec.style.display = 'block';
   body.innerHTML = warnings.map(w => `• ${w}`).join('<br>');
+}
+
+/* ── New Analysis ── */
+function newAnalysis() {
+  document.getElementById('dashboard-screen').style.display = 'none';
+  document.getElementById('upload-screen').style.display = 'flex';
+  document.getElementById('partial-banner').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('error-detail').style.display = 'none';
+  document.getElementById('retry-btn').style.display = 'none';
+  document.getElementById('prog-bar').style.width = '0%';
+  document.getElementById('prog-bar').style.background = 'var(--gold)';
+  document.getElementById('run-btn').disabled = false;
+  // Clear file inputs so users can pick new files
+  document.getElementById('nb-input').value = '';
+  document.getElementById('xl-input').value = '';
+  document.getElementById('nb-name').textContent = 'Drop .ipynb here or click to browse';
+  document.getElementById('xl-name').textContent = 'Drop .xlsx here or click to browse';
 }
 </script>
 </body>

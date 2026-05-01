@@ -1,6 +1,8 @@
 # NovaMart Intelligence Dashboard
 
-A full-stack analytics dashboard that executes your `NovaMart_Final.ipynb` notebook on the server, scrapes all computed outputs, and renders a live executive dashboard — zero manual number entry.
+A full-stack analytics dashboard that executes your NovaMart notebook on the server, scrapes all computed outputs, and renders a live executive dashboard — zero manual number entry.
+
+**Supported notebooks:** `NovaMart_v3 (1).ipynb`, `NovaMart_Final.ipynb`, and any NovaMart-compatible `.ipynb` file.
 
 ---
 
@@ -44,11 +46,12 @@ open http://localhost:8000
 ```
 
 Then:
-1. Upload **NovaMart_Final.ipynb**
-2. Upload **Project_2.xlsx**
+1. Upload **NovaMart_v3 (1).ipynb** (or any compatible notebook)
+2. Upload **Project_2.xlsx** (or your data file)
 3. Click **Run Analysis**
 4. Wait ~60–90 seconds for notebook execution
 5. Dashboard renders automatically
+6. Use **↩ New Analysis** in the header to run a new file without refreshing
 
 ---
 

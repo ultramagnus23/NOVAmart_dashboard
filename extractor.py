@@ -61,17 +61,12 @@ def extract_kpis(all_text: str) -> Optional[dict]:
       ═══ NOVAMART — EXECUTIVE KPI DASHBOARD ═══
       NOVAMART EXECUTIVE KPI SUMMARY
       NovaMart KPI Dashboard
+      NovaMart v3 Executive Summary
       … and any line containing both NOVAMART (or NovaMart) and KPI
-    """
-    block_match = re.search(
-        r'(?:NOVAMART|NovaMart)[^\n]*(?:EXECUTIVE\s+)?KPI[^\n]*(?:DASHBOARD|SUMMARY|REPORT)?[^\n]*\n'
-        r'(.*?)(?:\n{2,}|\Z)',
-        all_text, re.IGNORECASE | re.DOTALL
-    )
-    if not block_match:
-        return None
 
-    block = block_match.group(1)
+    Falls back to a global scan of the full output if no labelled block is found,
+    so that v3 notebooks that print KPI lines without a heading still work.
+    """
     kpi_map = {
         'total_leads':          r'total\s+leads?\s*[:\|=]\s*([\d,]+)',
         'conversion_rate':      r'conv(?:ersion)?\s+rate?\s*[:\|=]\s*([\d.]+)',
@@ -85,9 +80,31 @@ def extract_kpis(all_text: str) -> Optional[dict]:
         'lead_revenue_ratio':   r'lead\s+(?:revenue\s+)?ratio\s*[:\|=]\s*([\d.]+)',
     }
 
+    # Try to isolate a dedicated KPI block first (preferred — more precise)
+    block_match = re.search(
+        r'(?:'
+        r'(?:NOVAMART|NovaMart)[^\n]*(?:EXECUTIVE\s+)?KPI[^\n]*\n'   # NOVAMART … KPI …
+        r'|KPI\s+(?:DASHBOARD|SUMMARY|REPORT|OVERVIEW)[^\n]*\n'       # KPI DASHBOARD …
+        r'|EXECUTIVE\s+(?:KPI|SUMMARY)[^\n]*\n'                       # EXECUTIVE KPI …
+        r')',
+        all_text, re.IGNORECASE
+    )
+
+    search_scope = all_text  # default: scan everything (v3 fallback)
+    if block_match:
+        # Capture from the heading line to the next double-blank-line or end
+        start = block_match.start()
+        tail = all_text[start:]
+        scope_match = re.search(
+            r'^[^\n]*\n(.*?)(?:\n{2,}|\Z)',
+            tail, re.DOTALL
+        )
+        if scope_match:
+            search_scope = scope_match.group(1)
+
     result = {}
     for key, pattern in kpi_map.items():
-        m = re.search(pattern, block, re.IGNORECASE)
+        m = re.search(pattern, search_scope, re.IGNORECASE)
         if m:
             raw = m.group(1).replace(',', '')
             try:
@@ -104,7 +121,8 @@ def extract_channel_table(all_text: str) -> Optional[list]:
     """
     block_match = re.search(
         r'(?:KPI\s+BREAKDOWN\s+BY[:\s]+CHANNEL'
-        r'|CHANNEL\s+(?:PERFORMANCE|KPI|BREAKDOWN|ANALYSIS)'
+        r'|CHANNEL\s+(?:PERFORMANCE|KPI|BREAKDOWN|ANALYSIS|SUMMARY|METRICS)'
+        r'|MARKETING\s+CHANNEL\s+(?:PERFORMANCE|ANALYSIS|SUMMARY)'
         r'|CHANNEL\s+SUMMARY'
         r')[^\n]*\n(.*?)(?:\n{2,}|\Z)',
         all_text, re.IGNORECASE | re.DOTALL
@@ -155,9 +173,10 @@ def extract_segments(all_text: str) -> Optional[list]:
     Looks for CUSTOMER SEGMENT SUMMARY / CLUSTER SUMMARY / SEGMENT PROFILES block.
     """
     block_match = re.search(
-        r'(?:CUSTOMER\s+SEGMENT\s+(?:SUMMARY|PROFILE|ANALYSIS)'
-        r'|SEGMENT\s+(?:SUMMARY|PROFILE)'
-        r'|CLUSTER\s+SUMMARY'
+        r'(?:CUSTOMER\s+SEGMENT\s+(?:SUMMARY|PROFILE|ANALYSIS|OVERVIEW)'
+        r'|SEGMENT\s+(?:SUMMARY|PROFILE|OVERVIEW|ANALYSIS)'
+        r'|CLUSTER\s+(?:SUMMARY|PROFILE|OVERVIEW|ANALYSIS)'
+        r'|CUSTOMER\s+CLUSTER\s+(?:SUMMARY|PROFILE)'
         r')[^\n]*\n(.*?)(?:\n{2,}|\Z)',
         all_text, re.IGNORECASE | re.DOTALL
     )
@@ -196,10 +215,16 @@ def extract_campaign_clusters(all_text: str) -> Optional[list]:
     Looks for CAMPAIGN CLUSTER PROFILES / RECOMMENDATIONS / ANALYSIS block.
     """
     block_match = re.search(
-        r'CAMPAIGN\s+CLUSTER\s+(?:PROFILES?|RECOMMENDATIONS?|ANALYSIS|SUMMARY)[^\n]*\n'
+        r'CAMPAIGN\s+CLUSTER\s+(?:PROFILES?|RECOMMENDATIONS?|ANALYSIS|SUMMARY|OVERVIEW)[^\n]*\n'
         r'(.*?)(?:\n{2,}|\Z)',
         all_text, re.IGNORECASE | re.DOTALL
     )
+    if not block_match:
+        block_match = re.search(
+            r'CAMPAIGN\s+(?:CLUSTER|PERFORMANCE|ANALYSIS)\s*(?:PROFILES?|SUMMARY|OVERVIEW)?[^\n]*\n'
+            r'(.*?)(?:\n{2,}|\Z)',
+            all_text, re.IGNORECASE | re.DOTALL
+        )
     if not block_match:
         return None
 
@@ -235,7 +260,7 @@ def extract_discount_analysis(all_text: str) -> Optional[list]:
     Looks for DISCOUNT EFFECTIVENESS / DISCOUNT ANALYSIS block.
     """
     block_match = re.search(
-        r'DISCOUNT\s+(?:EFFECTIVENESS|ANALYSIS|IMPACT)[^\n]*\n(.*?)(?:\n{2,}|\Z)',
+        r'DISCOUNT\s+(?:EFFECTIVENESS|ANALYSIS|IMPACT|STRATEGY|PERFORMANCE)[^\n]*\n(.*?)(?:\n{2,}|\Z)',
         all_text, re.IGNORECASE | re.DOTALL
     )
     if not block_match:
@@ -291,9 +316,12 @@ def extract_models(all_text: str) -> Optional[dict]:
         all_text, re.IGNORECASE | re.DOTALL
     )
     if not block_match:
-        # Fallback: any MODEL COMPARISON block
+        # Fallback: any MODEL COMPARISON or LEAD MODEL block
         block_match = re.search(
-            r'(?:LEAD\s+)?MODEL\s+COMPARISON[^\n]*\n(.*?)(?:\n{2,}|\Z)',
+            r'(?:(?:LEAD\s+)?MODEL\s+COMPARISON'
+            r'|LEAD\s+CONVERSION\s+MODEL'
+            r'|PREDICTIVE\s+MODEL(?:S)?\s+(?:SUMMARY|COMPARISON|RESULTS)'
+            r')[^\n]*\n(.*?)(?:\n{2,}|\Z)',
             all_text, re.IGNORECASE | re.DOTALL
         )
     if not block_match:
@@ -402,7 +430,10 @@ def extract_repeat_buyer(all_text: str) -> Optional[dict]:
     Looks for REPEAT BUYER MODEL COMPARISON block.
     """
     block_match = re.search(
-        r'REPEAT\s+BUYER\s+MODEL\s+COMPARISON[^\n]*\n(.*?)(?:\n{2,}|\Z)',
+        r'(?:REPEAT\s+BUYER\s+MODEL\s+COMPARISON'
+        r'|REPEAT\s+PURCHASE\s+MODEL'
+        r'|REPEAT\s+BUYER\s+(?:ANALYSIS|PREDICTION|SUMMARY)'
+        r')[^\n]*\n(.*?)(?:\n{2,}|\Z)',
         all_text, re.IGNORECASE | re.DOTALL
     )
     if not block_match:
